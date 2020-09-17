@@ -3,6 +3,9 @@ import org.jetbrains.dokka.DokkaConfigurationImpl
 import org.jetbrains.dokka.DokkaSourceSetID
 import org.jetbrains.dokka.DokkaSourceSetImpl
 import org.jetbrains.dokka.analysis.*
+import org.jetbrains.dokka.plugability.DokkaContext
+import org.jetbrains.dokka.plugability.DokkaPlugin
+import org.jetbrains.dokka.plugability.ExtensionPoint
 import org.jetbrains.dokka.utilities.DokkaConsoleLogger
 import org.jetbrains.dokka.utilities.DokkaLogger
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
@@ -11,6 +14,7 @@ import org.jetbrains.kotlin.descriptors.impl.DeclarationDescriptorVisitorEmptyBo
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 class Visitor : DeclarationDescriptorVisitorEmptyBodies<List<String>, Unit>() {
     override fun visitPackageFragmentDescriptor(descriptor: PackageFragmentDescriptor?, data: Unit?): List<String> {
@@ -33,11 +37,18 @@ fun main(args: Array<String>) {
             sourceSetID = DokkaSourceSetID("klaxonScopeID", "klaxonJVM"),
             sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main/kotlin"))
     )
-    val dokkaConfiguration: DokkaConfiguration = DokkaConfigurationImpl(
+    val ctx = object: DokkaContext {
+        override fun <T : DokkaPlugin> plugin(kclass: KClass<T>): T? = TODO("Not yet implemented")
+        override fun <T : Any, E : ExtensionPoint<T>> get(point: E): List<T> = TODO("Not yet implemented")
+        override fun <T : Any, E : ExtensionPoint<T>> single(point: E): T = TODO("Not yet implemented")
+
+        override val logger: DokkaLogger = DokkaConsoleLogger
+        override val configuration: DokkaConfiguration = DokkaConfigurationImpl(
             sourceSets = listOf(sourceset)
-    )
-    val dokkaLogger: DokkaLogger = DokkaConsoleLogger
-    val koltinAnalysis: KotlinAnalysis = KotlinAnalysis(dokkaConfiguration, dokkaLogger)
+        )
+        override val unusedPoints: Collection<ExtensionPoint<*>> = emptyList()
+    }
+    val koltinAnalysis: KotlinAnalysis = KotlinAnalysis(ctx)
     val (environment, facade) = koltinAnalysis[sourceset]
     val packageFragments = environment.getSourceFiles().asSequence()
             .map { it.packageFqName }
@@ -53,7 +64,7 @@ fun main(args: Array<String>) {
             )
         }
     }
-    println("Top 10 longest class names: ${result.map { it to it.length}.sortedByDescending { it.second }.take(10)}")
+    println("Top 10 longest class names: ${result.map { it to it.length}.sortedByDescending { it.second }.take(10).map { "${it.first}, length: ${it.second}\n"} }}")
 }
 
 fun String.runCommand(workingDir: File) {
