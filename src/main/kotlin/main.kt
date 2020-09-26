@@ -1,13 +1,20 @@
+import org.jetbrains.dokka.DokkaConfiguration
+import org.jetbrains.dokka.DokkaConfigurationImpl
 import org.jetbrains.dokka.DokkaSourceSetID
 import org.jetbrains.dokka.DokkaSourceSetImpl
 import org.jetbrains.dokka.analysis.KotlinAnalysis
+import org.jetbrains.dokka.plugability.DokkaContext
+import org.jetbrains.dokka.plugability.DokkaPlugin
+import org.jetbrains.dokka.plugability.ExtensionPoint
 import org.jetbrains.dokka.utilities.DokkaConsoleLogger
+import org.jetbrains.dokka.utilities.DokkaLogger
 import org.jetbrains.kotlin.descriptors.ClassDescriptor
 import org.jetbrains.kotlin.descriptors.PackageFragmentDescriptor
 import org.jetbrains.kotlin.descriptors.impl.DeclarationDescriptorVisitorEmptyBodies
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import java.io.File
 import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 class Visitor : DeclarationDescriptorVisitorEmptyBodies<List<String>, Unit>() {
     override fun visitPackageFragmentDescriptor(descriptor: PackageFragmentDescriptor?, data: Unit?): List<String> {
@@ -30,7 +37,18 @@ fun main(args: Array<String>) {
             sourceSetID = DokkaSourceSetID("klaxonScopeID", "klaxonJVM"),
             sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main/kotlin"))
     )
-    val koltinAnalysis = KotlinAnalysis(listOf(sourceset), DokkaConsoleLogger)
+    val ctx = object: DokkaContext {
+        override fun <T : DokkaPlugin> plugin(kclass: KClass<T>): T? = TODO("Not yet implemented")
+        override fun <T : Any, E : ExtensionPoint<T>> get(point: E): List<T> = TODO("Not yet implemented")
+        override fun <T : Any, E : ExtensionPoint<T>> single(point: E): T = TODO("Not yet implemented")
+
+        override val logger: DokkaLogger = DokkaConsoleLogger
+        override val configuration: DokkaConfiguration = DokkaConfigurationImpl(
+            sourceSets = listOf(sourceset)
+        )
+        override val unusedPoints: Collection<ExtensionPoint<*>> = emptyList()
+    }
+    val koltinAnalysis = KotlinAnalysis(ctx)
     val (environment, facade) = koltinAnalysis[sourceset]
     val packageFragments = environment.getSourceFiles().asSequence()
             .map { it.packageFqName }
