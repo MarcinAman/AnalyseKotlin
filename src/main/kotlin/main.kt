@@ -48,8 +48,8 @@ fun main(args: Array<String>) {
         )
         override val unusedPoints: Collection<ExtensionPoint<*>> = emptyList()
     }
-    val koltinAnalysis = KotlinAnalysis(ctx)
-    val (environment, facade) = koltinAnalysis[sourceset]
+    val kotlinAnalysis = KotlinAnalysis(ctx)
+    val (environment, facade) = kotlinAnalysis[sourceset]
     val packageFragments = environment.getSourceFiles().asSequence()
             .map { it.packageFqName }
             .distinct()
