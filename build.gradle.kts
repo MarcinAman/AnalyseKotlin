@@ -13,8 +13,8 @@ repositories {
     jcenter()
 }
 dependencies {
-    implementation("org.jetbrains.dokka:dokka-analysis:1.4.10")
-    implementation("org.jetbrains.dokka:dokka-core:1.4.10")
+    implementation("org.jetbrains.dokka:dokka-analysis:1.4.10.2")
+    implementation("org.jetbrains.dokka:dokka-core:1.4.10.2")
     testImplementation(kotlin("test-junit"))
 }
 tasks.withType<KotlinCompile>() {
