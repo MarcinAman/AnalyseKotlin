@@ -46,7 +46,7 @@ fun main(args: Array<String>) {
             )
         }
     }
-    println("Top 10 longest class names: ${result.map { it to it.length}.sortedByDescending { it.second }.take(10).map { "${it.first}, length: ${it.second}\n"} }}")
+    println("Longest class name: ${result.map { it to it.length }.maxBy { it.second }!!.let { "${it.first}, length: ${it.second}"} }")
 }
 
 fun String.runCommand(workingDir: File) {
