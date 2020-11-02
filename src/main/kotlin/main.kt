@@ -28,7 +28,7 @@ fun main(args: Array<String>) {
     val sourceset = DokkaSourceSetImpl(
             displayName = "klaxon",
             sourceSetID = DokkaSourceSetID("klaxonScopeID", "klaxonJVM"),
-            sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main/kotlin"))
+            sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main"))
     )
     val kotlinAnalysis = KotlinAnalysis(listOf(sourceset), DokkaConsoleLogger)
     val (environment, facade) = kotlinAnalysis[sourceset]

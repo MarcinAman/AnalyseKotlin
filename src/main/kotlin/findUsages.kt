@@ -6,6 +6,7 @@ import org.jetbrains.kotlin.descriptors.*
 import org.jetbrains.kotlin.descriptors.impl.DeclarationDescriptorVisitorEmptyBodies
 import org.jetbrains.kotlin.idea.refactoring.fqName.fqName
 import org.jetbrains.kotlin.resolve.calls.components.isVararg
+import org.jetbrains.kotlin.resolve.descriptorUtil.fqNameOrNull
 import org.jetbrains.kotlin.resolve.scopes.DescriptorKindFilter
 import org.jetbrains.kotlin.resolve.scopes.MemberScope
 import java.io.File
@@ -28,12 +29,14 @@ class FindUsagesVisitor : DeclarationDescriptorVisitorEmptyBodies<List<String>, 
     override fun visitConstructorDescriptor(constructorDescriptor: ConstructorDescriptor?, data: KClass<*>?): List<String> =
         visitCallable(constructorDescriptor, data)
 
-    override fun visitValueParameterDescriptor(descriptor: ValueParameterDescriptor?, data: KClass<*>?): List<String> =
-        if(descriptor?.isVararg == true){
-            listOfNotNull(descriptor.varargElementType?.fqName?.asString())
+    override fun visitValueParameterDescriptor(descriptor: ValueParameterDescriptor?, data: KClass<*>?): List<String> {
+        val fromTypeArguments = descriptor?.type?.arguments?.mapNotNull { it.type.fqName?.asString() }.orEmpty()
+        return if(descriptor?.isVararg == true){
+            listOfNotNull(descriptor.varargElementType?.fqName?.asString()) + fromTypeArguments
         } else {
-            listOfNotNull(descriptor?.type?.fqName?.asString())
+            listOfNotNull(descriptor?.type?.fqName?.asString()) + fromTypeArguments
         }
+    }
 
     override fun visitFunctionDescriptor(descriptor: FunctionDescriptor?, data: KClass<*>?): List<String> =
         visitCallable(descriptor, data)
@@ -65,7 +68,7 @@ fun main(args: Array<String>) {
     val sourceset = DokkaSourceSetImpl(
         displayName = "klaxon",
         sourceSetID = DokkaSourceSetID("klaxonScopeID", "klaxonJVM"),
-        sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main/kotlin"))
+        sourceRoots = setOf(File("${workingDir.absolutePath}/klaxon/klaxon/src/main"))
     )
     val kotlinAnalysis = KotlinAnalysis(listOf(sourceset), DokkaConsoleLogger)
     val (environment, facade) = kotlinAnalysis[sourceset]
